@@ -47,7 +47,7 @@ lowest=6 #Minimal size of patches
 
 
 A2=np.zeros((m, t,n))
-#
+
 #var 1 and var2: Each source SV
 ru=1
 while ru>0:
@@ -68,17 +68,15 @@ plt.plot(A2[:,:,1].T), plt.title('Source 2')
  #%%
 
 '''Run L-GMCA (without filtering)'''   
+#(Aout, Sout): result of L-GMCA
+#A0: Frechet mean of Aout
 Aout, Sout, Ar, Sr,temp2 ,ss= pyl.GMCAperpatch(0,X, dS, dPatch, Init=1, aMCA=0)
-
 A0=np.repeat(gen.moyFrechet(Aout).reshape(m,1,n), t, 1)
-#%%
 
-'''Run svGMCA''' 
+
+'''Run svGMCA: warm-up stage (without weights)''' 
 seuil_1=thres.threshold_finalstep(3,sigma_noise,110/100.,Sout, Aout, A0, X, 5,  0, J=2)
-
 (A_1, r,ecartre,elapsed_time)= algoA.FISTA(Sout, X, A0, Aout,seuil_1, 8800 ,lim=3e-7 ,stepg=.8, iteprox=6000, limprox=5e-7, J=2)
-
-
 A=np.zeros((400, 5,nb_pix ,2))
 S=np.zeros((400, 2, nb_pix ))
 seuil=np.zeros((400, nb_pix, 2, 2))  
@@ -87,12 +85,9 @@ A[0,:,:,:]=dp(A_1)
 inner_ecart=[]
 outer_ecart=[]
 outer_time=[]
-#%
 l=dp(0)
-
 for k in np.arange(l, l+30):     
    print(k)
- 
    S[k+1,:,: ]=algS.lasso_direct(X, A[k,:,:,:], S[k,:,:],kend=3, stepgg=1.,resol=2, lim=5e-6)
    seuil[k+1,:,:,:] = thres.threshold_finalstep(3,sigma_noise,(110)/100.,S[k+1,:,:], A[k,:,:,:], A0, X, 5,  0)
    (A[k+1,:,:,:],r,ecartre,elapsed_time)= algoA.FISTA(S[k+1,:,:], X, A0, A[k,:,:,:],seuil_1, 6000,lim=1e-6 ,stepg=.8, iteprox=6000, limprox=3e-6)
@@ -106,16 +101,14 @@ for k in np.arange(l, l+30):
        break
    outer_ecart.append(eA)
 
+'''Refinement stage (with weights)'''
 l=dp(k+1)
-
 for k in np.arange(l, l+40):     
    print(k)
- 
    S[k+1,:,: ]=algS.lasso_direct(X, A[k,:,:,:], S[k,:,:],kend=3, stepgg=.9,resol=2, lim=5e-6)
    seuil[k+1,:,:,:] = thres.threshold_finalstep(3,sigma_noise,(105.)/100.,S[k+1,:,:], A[k,:,:,:], A0, X, 5,  1)
    (A[k+1,:,:,:],r,ecartre,elapsed_time)= algoA.FISTA(S[k+1,:,:], X, A0, A[k,:,:,:],seuil_1, 6000,lim=1e-6 ,stepg=.8, iteprox=6000, limprox=1e-6)
    A0=np.repeat(gen.moyFrechet(A[k+1,:,:,:]).reshape(m,1,n), t, 1)
-   
    inner_ecart.append(ecartre)
    if ecartre[-1]>5e-5:
        break
