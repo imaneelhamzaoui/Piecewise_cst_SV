@@ -92,36 +92,15 @@ def VS_dct(t, higher_freq, activ_param, lower_freq=1,Energy=1):
     a=np.max(res)
     #res=res/np.max(res)#x non-negative
     return((res)/(1.*a))
-
-def VS_oracle(t, Patchsize, amp=1., filt=1, sigma=30):
-    """
-    generation of piecewise SV appropriate to oracle L-GMCA
-    """
-    vec=np.zeros((t))
     
-    e=t/Patchsize
-    for k in range(e):
-        vec[int(Patchsize*k):int(Patchsize*(k+1))]=(np.random.randn(1))*np.ones((int(Patchsize)))
-    
-    vec-=(np.min(vec))
-    a=np.max(vec)
-    res=vec/(1.*a)
-    
-    if filt and sigma>0:
-
-       res=filtered(t, sigma, vec/(1.*a))
-    return(res)
-        
-def VS_piecewcst(t, nbr_bloc=3,low_piece=200, amp=1., filt=1, sigma=30):
+def VS_piecewcst(t, freq=.2, sigma=30,low_piece=50, amp=.5):
     """
     SV of size t
     
-  
+
     opt: t - nbr of samples
          freq - percentage of the mean size of a block the nbr of samples
          --- the lowerr freq, the more VS ---
-        Need to be changed         
-         
          low_piece : lowest nbrr of samples for each block
          amp: maximal amplitude
          sigma: std of the gaussian filter
@@ -130,7 +109,7 @@ def VS_piecewcst(t, nbr_bloc=3,low_piece=200, amp=1., filt=1, sigma=30):
     low_piece must be superior than t*freq
     """
     
-    #nbr_bloc=int(t/(t*freq))
+    nbr_bloc=int(t/(t*freq))
     g=np.zeros((nbr_bloc))
     
     for k in range(nbr_bloc-1):
@@ -139,26 +118,18 @@ def VS_piecewcst(t, nbr_bloc=3,low_piece=200, amp=1., filt=1, sigma=30):
             g[k]=np.random.randint(low_piece, C)
         else:
             g[k]=low_piece
-        
             
     g[-1]=int(t-np.sum(g))
     np.random.shuffle(g)
-    print(g)
+    
     vec=np.zeros((t))
     e=len(g)
-    
+    a=np.random.uniform(0,amp)
     
     for k in range(e):
-        vec[int(np.sum(g[:k])):int(np.sum(g[:k+1]))]=(np.random.randn(1))*np.ones((int(g[k])))
-    
-    vec-=(np.min(vec))
-    a=np.max(vec)
-    res=vec/(1.*a)
-    
-    if filt and sigma>0:
-        res=filtered(t, sigma, vec/(1.*a))
-    return(res)
-    
+        vec[int(np.sum(g[:k])):int(np.sum(g[:k+1]))]=np.random.uniform(a, a+amp)*np.ones((int(g[k])))
+
+    return(filtered(t, sigma, vec))
 
 # Creating spectral variabilities
 

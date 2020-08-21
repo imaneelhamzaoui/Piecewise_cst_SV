@@ -12,7 +12,7 @@ from copy import deepcopy as dp
 from copy import copy
 
 """
-Initialization with PCA 
+Initialization with PCA -- Cecile --
 """
 def InitPCA(X, dS):
     
@@ -142,7 +142,7 @@ def AMCA(Xini, ddS, aMCA,Init):
                 La = np.max(Sa)
                 for it_A in range(250):
                     S[indS,:] = S[indS,:] + 1/La*np.dot(A[:,indS].T,X - np.dot(A[:,indS],S[indS,:]))
-              
+            S[S<1e-16]=1e-16 
             Stemp = S[indS,:] 
             
             ###thresholding####
